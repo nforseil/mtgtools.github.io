@@ -629,9 +629,9 @@
             row.innerHTML = `
           <span class="text-xs font-bold ${color.text}">Joueur ${i+1}</span>
           <div class="flex items-center gap-2">
-            <button onclick="adjustCmdrDamage(${i}, -1)" class="btn-press w-7 h-7 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-black text-xs border border-slate-600 flex items-center justify-center">−</button>
+            <button onclick="adjustCmdrDamage(${i},activeCmdrTarget, -1)" class="btn-press w-7 h-7 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-black text-xs border border-slate-600 flex items-center justify-center">−</button>
             <span class="font-outfit font-black text-sm text-slate-100 min-w-[20px] text-center">${val}</span>
-            <button onclick="adjustCmdrDamage(${i}, 1)" class="btn-press w-7 h-7 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg font-black text-xs border border-slate-600 flex items-center justify-center">+</button>
+            <button onclick="adjustCmdrDamage(${i},activeCmdrTarget, 1)" class="btn-press w-7 h-7 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg font-black text-xs border border-slate-600 flex items-center justify-center">+</button>
           </div>
         `;
             listEl.appendChild(row);
@@ -640,19 +640,25 @@
         document.getElementById('cmdr-modal').classList.remove('hidden');
     }
 
-    function adjustCmdrDamage(attackerIdx, amount) {
-        if (activeCmdrTarget === null) return;
-        const p = players[activeCmdrTarget];
-        p.cmdr[attackerIdx] = Math.max(0, p.cmdr[attackerIdx] + amount);
+    function adjustCmdrDamage(attackerIdx, targetIdx, amount) {
+        if (targetIdx === null) return;
+        const p = players[targetIdx];
 
-        const isDeadByCmdr = p.cmdr[attackerIdx] >= 21;
-        checkPlayerDeath(activeCmdrTarget);
+        const currentCmdrDamage = p.cmdr[attackerIdx] || 0;
+        const newCmdrDamage = currentCmdrDamage + amount;
 
-        // Fermeture automatique du menu si 21 ou +
-        if (isDeadByCmdr) {
+        if (newCmdrDamage >= 0 && newCmdrDamage <= 21) {
+            p.cmdr[attackerIdx] = newCmdrDamage;
+
+            changeLife(targetIdx, -amount);
+        } else {
+            checkPlayerDeath(targetIdx);
+        }
+
+        if (p.cmdr[attackerIdx] >= 21) {
             closeCmdrModal();
         } else {
-            openCmdrModal(activeCmdrTarget);
+            openCmdrModal(targetIdx);
         }
     }
 
